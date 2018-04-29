@@ -87,6 +87,19 @@ check_count_connected([A|L], X, Y, W, H) :-
 	X1 is X + 1,
 	check_count_connected(L, X1, Y, W, H).
 
+/* get the value of a square */
+/* L is a grid with the value of each square */
+get_value(X, Y, [_|L], Val) :-
+    Ytmp is Y - 1,
+    get_value(X, Ytmp, L, Val).
+get_value(X, 0, [A|_], Val) :-
+    get_value_line(X, A, Val).
+
+get_value_line(X, [_|L], Val) :-
+    Xtmp is X - 1,
+    get_value_line(Xtmp, L, Val).
+get_value_line(0, [Val|_], Val). 
+
 /* find the next square */
 next_square(Xini, Y, Xnext, Y, W, _) :-
     Xtmp is Xini + 1,
