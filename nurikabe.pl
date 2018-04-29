@@ -142,15 +142,18 @@ next_square(Xini, Yini, 0, Ynext, W, H) :-
 /* count the number of walls in the grid */
 count_walls(W, H, _, W, H, 0).
 count_walls(X, Y, Grid, W, H, N) :-
-    next_square(X, Y, Xnext, Ynext, W, H),
     get_value(X, Y, Grid, -2),
-    count_walls(Xnext, Ynext, Grid, W, H, Nnew),
-    N is Nnew + 1.
-count_walls(X, Y, Grid, W, H, N) :-
-    count_walls(Xnext, Ynext, Grid, W, H, N),
     next_square(X, Y, Xnext, Ynext, W, H),
+    count_walls(Xnext, Ynext, Grid, W, H, Nnew),
+    N is Nnew + 1,
+    X \= W.
+count_walls(X, Y, Grid, W, H, N) :-
+    get_value(X, Y, Grid, Val),
+    next_square(X, Y, Xnext, Ynext, W, H),
+    count_walls(Xnext, Ynext, Grid, W, H, N),
     Val \= -2,
-    get_value(X, Y, Grid, Val).
+    X \= W.
+
 
 /*
 nurikabe([
