@@ -87,6 +87,18 @@ check_count_connected([A|L], X, Y, W, H) :-
 	X1 is X + 1,
 	check_count_connected(L, X1, Y, W, H).
 
+/* find the next square */
+next_square(Xini, Y, Xnext, Y, W, _) :-
+    Xtmp is Xini + 1,
+    Xtmp \= W,
+    Xnext = Xtmp.
+next_square(Xini, Yini, 0, Ynext, W, H) :-
+    Xtmp is W - 1,
+    Xini = Xtmp,
+    Ytmp is Yini + 1,
+    Ytmp \= H,
+    Ynext = Ytmp.
+
 nurikabe([
     [_, 1, _, _],
     [_, _, _, 2],
