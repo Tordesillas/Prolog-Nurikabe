@@ -4,9 +4,10 @@ nurikabe([A|L]) :-
     length([A|L], H),
     length(A, W),
     fd_domain_list([A|L], -1, -2,W,H),
-    check_count_connected([A|L], 0, 0, W, H),
+    /*check_count_connected([A|L], 0, 0, W, H),*/
     check_2x2_grid(0, 0, [A|L], W, H),
-    fd_labelingff([A|L]).
+	flatten([A|L],S),
+    fd_labelingff(S).
 
 fd_domain_list([],_, _,_,_).
 fd_domain_list([A|L], Lv, Hv,W,H) :-
@@ -14,6 +15,13 @@ fd_domain_list([A|L], Lv, Hv,W,H) :-
     check_values(A, Lv,Hv,Nb_values),
     fd_domain_list(L, Lv,Hv,W,H).
 
+count_wall([],0).
+count_wall([A|L],N):- count_wall_line(A,N1),count_wall(L,N2),N is N1+N2.
+	
+count_wall_line([],0).
+count_wall_line([-2|T],Y):- count_wall_line(T,Z), Y is 1+Z.
+count_wall_line([_|T],Z):- count_wall_line(T,Z).		
+	
 check_values([],_,_,_).		
 check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A=X.
 check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A=Y.
@@ -79,7 +87,7 @@ check_count_connected(X, Y, Grid, W, H) :-
     check_count_connected(Xnext, Ynext, Grid, W, H).
 
 /* check bloc of wall */
-check_2x2_grid(W, H, _, W, H).
+check_2x2_grid(_, Y, _, W, H):-Y is H - 1.
 check_2x2_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, V),
     same_kind(-2, V),
@@ -88,7 +96,6 @@ check_2x2_grid(X, Y, Grid, W, H) :-
     check_2x2_grid(Xnext, Ynext, Grid, W, H).
 check_2x2_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, V),
-    check_2x2(X, Y, Grid, W, H),
     next_square(X, Y, Xnext, Ynext, W, H),
     check_2x2_grid(Xnext, Ynext, Grid, W, H),
     \+same_kind(-2, V).
@@ -100,7 +107,10 @@ check_2x2(X, Y, Grid, W, H) :-
     get_value(X1, Y1, Grid, V1),
     get_value(X2, Y2, Grid, V2),
     get_value(X3, Y3, Grid, V3),
-    \+three_walls(V1, V2, V3).
+\+three_walls(V1, V2, V3).
+
+check_2x2(X,_,_,W,H):- X is W - 1.
+
 
 /* check if 3 square are wall */
 three_walls(V1, V2, V3) :- same_kind(V1, V2), same_kind(V2, V3), same_kind(-2, V1).
@@ -164,7 +174,6 @@ nurikabe([
     [_, _, _, _],
     [2, _, 2, _]
 ]).
-
 nurikabe([
     [_, _, _, _, _, _],
     [_, _, _, _, _, 5],
@@ -173,7 +182,6 @@ nurikabe([
     [2, _, _, _, _, _],
     [_, _, 5, _, _, _]
 ]).
-
 nurikabe([
     [_, 4, _, 5, _],
     [_, _, _, _, _],
@@ -181,7 +189,6 @@ nurikabe([
     [4, _, _, _, _],
     [_, _, _, _, _]
 ]).
-
 nurikabe([
     [_, _, _, 2, _, _,_,_,_,_],
     [_, _, _, _, _, 2,_,_,_,_],
