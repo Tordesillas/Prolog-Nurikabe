@@ -1,18 +1,18 @@
 /* -1 is ground, -2 is wall */
 
 nurikabe([A|L]) :-
-	 length([A|L], H),
-     length(A, W),
-     fd_domain_list([A|L], -1, -2,W,H).     
-     /*check_count_connected([A|L], 0, 0, W, H),
-     check_2x2_grid(0, 0, [A|L], W, H),
-     fd_labelingff([A|L]).*/
+    length([A|L], H),
+    length(A, W),
+    fd_domain_list([A|L], -1, -2,W,H),
+    check_count_connected([A|L], 0, 0, W, H),
+    check_2x2_grid(0, 0, [A|L], W, H),
+    fd_labelingff([A|L]).
 
 fd_domain_list([],_, _,_,_).
 fd_domain_list([A|L], Lv, Hv,W,H) :-
-		Nb_values is W*H,
-        check_values(A, Lv,Hv,Nb_values),
-        fd_domain_list(L, Lv,Hv,W,H).
+    Nb_values is W*H,
+    check_values(A, Lv,Hv,Nb_values),
+    fd_domain_list(L, Lv,Hv,W,H).
 
 check_values([],_,_,_).		
 check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A=X.
@@ -31,70 +31,55 @@ adjacent([Xa, Y], [Xb, Y]) :-
     Xb is Xa - 1.
 
 /* two cells are connected if they are the same kind and they are adjacent */
-/* V: kind ; C: coordinates ; W: width of board : H: height of board */
-connected([Va|Ca], [Vb|Cb], W, H) :-
-	same_kind(Va, Vb),
-	adjacent(Ca, Cb).
-/* transitivity of connections */
-connected(A, C, W, H) :-
-	connected(A, B, W, H),
-	connected(B, C, W, H). 
+connected(X1, Y1, X2, Y2, Grid) :-
+    get_value(X1, Y1, Grid, V1),
+    get_value(X2, Y2, Grid, V2),
+    same_kind(V1, V2),
+    adjacent([X1, Y1], [X2, Y2]).
+connected(X1, Y1, X2, Y2, Grid) :-
+    connected(X1, Y1, Xtmp, Ytmp, Grid),
+    connected(Xtmp, Ytmp, X2, Y2, Grid).
 
-/* count cells connected  with A */
-count_connected(_, [], _, _, _).
-/* argument B is a list, go deeper */
-count_connected(La, [B|L], Xb, Yb, W, H, N) :-
-	is_list(B),
-	count_connected(La, B, Xb, Yb, W, H, N),
-	count_connected(La, L, Xb, Yb, N).
-
-count_connected(La, [B|L], Xb, Yb, W, H, N1) :-
-	\+is_list(B),
-	increment_if_connected(La, [B, Xb, Yb], W, H, N, N1),
-	count_connected(La, L, Xb, Yb, W, H, N).
-	
-/* increment N in N1 if A is connected to B */
-increment_if_connected(La, Lb, W, H, N, N1) :-
-	N1 is N + 1,
-	connected(La, Lb, W, H).
-increment_if_connected(La, Lb, W, H, N, N1) :-
-	N1 is N,
-	\+connected(La, Lb, W, H).
+/* count how many squares are connected */
+count_connected(_, _, X, Y, _, W, H, _) :-
+    X is W - 1,
+    Y is H - 1.
+count_connected(X, Y, Xi, Yi, Grid, W, H, N) :-
+    next_square(Xi, Yi, Xnext, Ynext, W, H),
+    connected(X, Y, Xi, Yi, Grid),
+    Nnew is N - 1,
+    count_connected(X, Y, Xnext, Ynext, Grid, W, H, Nnew).
+count_connected(X, Y, Xi, Yi, Grid, W, H, N) :-
+    next_square(Xi, Yi, Xnext, Ynext, W, H),
+    count_connected(X, Y, Xnext, Ynext, Grid, W, H, N),
+    \+connected(X, Y, Xi, Yi, Grid).
 
 /* check if cells are of the same kind */
 /* either both are Walls or both are not Walls */
 same_kind(Va, Vb) :-
-	Va = -2, Vb = -2.
+    Va = -2, Vb = -2.
 same_kind(Va, Vb) :-
-	Va \= -2, Vb \= -2.
+    Va \= -2, Vb \= -2.
 
-	
-check_count_connected([], _, _, _, _).
-/* argument is a list, go deeper */
-check_count_connected([A|L], X, Y, W, H) :-
-	is_list(A),
-	X1 is X+1,
-	check_count_connected(A, X1, Y, W, H),
-	Y1 is Y+1,
-	check_count_connected(L, 0, Y1, W, H).
-check_count_connected([A|L], X, Y, W, H) :-
-	\+is_list(A),
-	A >= 0,
-	count_connected([A, X, Y], 0, 0, W, H, N),
-	A = N,
-	X1 is X+1,
-	check_count_connected(L, X1, Y, W, H).
-/* not a number, don't count */
-check_count_connected([A|L], X, Y, W, H) :-
-	\+is_list(A),
-	A < 0,
-	X1 is X + 1,
-	check_count_connected(L, X1, Y, W, H).
+/* check if the values in the squares are respected */
+check_count_connected(W, H, _, W, H).
+check_count_connected(X, Y, Grid, W, H) :-
+    get_value(X, Y, -1),
+    next_square(X, Y, Xnext, Ynext, Grid, W, H),
+    check_count_connected(Xnext, Ynext, Grid, W, H).
+check_count_connected(X, Y, Grid, W, H) :-
+    get_value(X, Y, -2),
+    next_square(X, Y, Xnext, Ynext, Grid, W, H),
+    check_count_connected(Xnext, Ynext, Grid, W, H).
+check_count_connected(X, Y, Grid, W, H) :-
+    get_value(X, Y, Val),
+    Val \= -1, Val \= -2,
+    count_connected(X, Y, 0, 0, Grid, W, H, Val),
+    next_square(X, Y, Xnext, Ynext, Grid, W, H),
+    check_count_connected(Xnext, Ynext, Grid, W, H).
 
 /* check bloc of wall */
-check_2x2_grid(X, Y, _, W, H) :-
-    X is W - 1,
-    Y is H - 1. 
+check_2x2_grid(W, H, _, W, H).
 check_2x2_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, V),
     same_kind(-2, V),
@@ -142,6 +127,10 @@ get_value_line(X, [_|L], Val) :-
 get_value_line(0, [Val|_], Val). 
 
 /* find the next square */
+/* the function stop at the position (W,H) */
+next_square(X, Y, W, H, W, H) :-
+    X is W - 1,
+    Y is H - 1.
 next_square(Xini, Y, Xnext, Y, W, _) :-
     Xnext is Xini + 1,
     Xnext \= W.
@@ -150,6 +139,20 @@ next_square(Xini, Yini, 0, Ynext, W, H) :-
     Ynext is Yini + 1,
     Ynext \= H.
 
+/* count the number of walls in the grid */
+count_walls(W, H, _, W, H, 0).
+count_walls(X, Y, Grid, W, H, N) :-
+    next_square(X, Y, Xnext, Ynext, W, H),
+    get_value(X, Y, Grid, -2),
+    count_walls(Xnext, Ynext, Grid, W, H, Nnew),
+    N is Nnew + 1.
+count_walls(X, Y, Grid, W, H, N) :-
+    count_walls(Xnext, Ynext, Grid, W, H, N),
+    next_square(X, Y, Xnext, Ynext, W, H),
+    Val \= -2,
+    get_value(X, Y, Grid, Val).
+
+/*
 nurikabe([
     [_, 1, _, _],
     [_, _, _, 2],
@@ -159,7 +162,6 @@ nurikabe([
     [2, _, 2, _]
 ]).
 
-
 nurikabe([
     [_, _, _, _, _, _],
     [_, _, _, _, _, 5],
@@ -168,8 +170,6 @@ nurikabe([
     [2, _, _, _, _, _],
     [_, _, 5, _, _, _]
 ]).
-
-
 
 nurikabe([
     [_, 4, _, 5, _],
@@ -190,4 +190,4 @@ nurikabe([
     [_, _, 2, _, _, _,_,3,_,_],
     [_, _, _, _, 1, _,_,_,_,_],
     [_, _, _, _, _, _,3,_,_,_]
-]).
+]).*/
