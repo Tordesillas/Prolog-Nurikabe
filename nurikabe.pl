@@ -13,28 +13,24 @@ fd_domain_list([A|L], Lv) :-
         fd_domain_list(L, Lv).
     
 /* check if two cells are adjacent */
-adjacent([Xa, Ya], [Xb, Yb], W, _) :-
-    Ya = Yb,
-    Tmp = Xb,
-    Tmp is Xa + 1 mod W.
-adjacent([Xa, Ya], [Xb, Yb], W, _) :-
-    Ya = Yb,
-    Tmp = Xa,
-    Tmp is Xb + 1 mod W.
-adjacent([Xa, Ya], [Xb, Yb], _, H) :-
-    Xa = Xb,
+adjacent([X, Ya], [X, Yb]) :-
     Tmp = Yb,
-    Tmp is Ya + 1 mod H.
-adjacent([Xa, Ya], [Xb, Yb], _, H) :-
-    Xa = Xb,
-    Tmp = Ya,
-    Tmp is Yb + 1 mod H.
+    Tmp is Ya + 1.
+adjacent([X, Ya], [X, Yb]) :-
+    Tmp = Yb,
+    Tmp is Ya - 1.
+adjacent([Xa, Y], [Xb, Y]) :-
+    Tmp = Xb,
+    Tmp is Xa + 1.
+adjacent([Xa, Y], [Xb, Y]) :-
+    Tmp = Xb,
+    Tmp is Xa - 1.
 
 /* two cells are connected if they are the same kind and they are adjacent */
 /* V: kind ; C: coordinates ; W: width of board : H: height of board */
 connected([Va|Ca], [Vb|Cb], W, H) :-
 	same_kind(Va, Vb),
-	adjacent(Ca, Cb, W, H).
+	adjacent(Ca, Cb).
 /* transitivity of connections */
 connected(A, C, W, H) :-
 	connected(A, B, W, H),
