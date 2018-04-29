@@ -1,17 +1,24 @@
 /* -1 is ground, -2 is wall */
 
 nurikabe([A|L]) :-
-     fd_domain_list([A|L], [-1, -2]),
-     length([A|L], H),
+	 length([A|L], H),
      length(A, W),
-     check_count_connected([A|L], 0, 0, W, H),
+     fd_domain_list([A|L], -1, -2,W,H).     
+     /*check_count_connected([A|L], 0, 0, W, H),
      check_2x2_grid(0, 0, [A|L], W, H),
-     fd_labelingff([A|L]).
+     fd_labelingff([A|L]).*/
 
-fd_domain_list([], _).
-fd_domain_list([A|L], Lv) :-
-        fd_domain(A, Lv),
-        fd_domain_list(L, Lv).
+fd_domain_list([],_, _,_,_).
+fd_domain_list([A|L], Lv, Hv,W,H) :-
+		Nb_values is W*H,
+        check_values(A, Lv,Hv,Nb_values),
+        fd_domain_list(L, Lv,Hv,W,H).
+
+check_values([],_,_,_).		
+check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A=X.
+check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A=Y.
+check_values([A|L],X,Y,Nb_values):- check_values(L,X,Y,Nb_values),A>=1,A=<Nb_values.
+			
     
 /* check if two cells are adjacent */
 adjacent([X, Ya], [X, Yb]) :-
