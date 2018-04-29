@@ -5,7 +5,7 @@ nurikabe([A|L]) :-
      length([A|L], H),
      length(A, W),
      check_count_connected([A|L], 0, 0, W, H),
-     check_count_connected([A|L], 0, 0, W, H),
+     check_2x2_grid(0, 0, [A|L], W, H),
      fd_labelingff([A|L]).
 
 fd_domain_list([], _).
@@ -108,10 +108,10 @@ check_2x2(X, Y, Grid, W, H) :-
     get_value(X1, Y1, Grid, V1),
     get_value(X2, Y2, Grid, V2),
     get_value(X3, Y3, Grid, V3),
-    \+three_wall(V1, V2, V3).
+    \+three_walls(V1, V2, V3).
 
 /* check if 3 square are wall */
-three_wall(V1, V2, V3) :- same_kind(V1, V2), same_kind(V2, V3), same_kind(-2, V1).
+three_walls(V1, V2, V3) :- same_kind(V1, V2), same_kind(V2, V3), same_kind(-2, V1).
 
 /* get the position of the square at the right and below */
 down(X, Yini, X, Ynext, _, H) :-
