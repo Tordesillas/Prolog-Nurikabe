@@ -6,9 +6,7 @@ nurikabe([A|L]) :-
     fd_domain_list([A|L], -1, -2, W, H),
     check_count_grid(0, 0, [A|L], W, H),
     check_2x2_grid(0, 0, [A|L], W, H),
-    check_walls([A|L], W, H),
-    flatten([A|L], S),
-    fd_labelingff(S).
+    check_walls([A|L], W, H).
 
 /* set the domain of the grid */
 fd_domain_list([],_, _,_,_).
@@ -66,14 +64,14 @@ check_count_grid(W, H, _, W, H).
 check_count_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, Val),
     next_square(X, Y, Xnext, Ynext, W, H),
-    check_count_grid(Xnext, Ynext, Grid, W, H),
-    Val < 0.
+    Val < 0,
+    check_count_grid(Xnext, Ynext, Grid, W, H).
 check_count_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, Val),
     next_square(X, Y, Xnext, Ynext, W, H),
-    check_count_grid(Xnext, Ynext, Grid, W, H),
     Val > 0,
-    check_count_island(X, Y, Grid, W, H).
+    check_count_island(X, Y, Grid, W, H),
+    check_count_grid(Xnext, Ynext, Grid, W, H).
 
 /* check if cells are of the same kind */
 /* either both are Walls or both are not Walls */
@@ -93,8 +91,8 @@ check_2x2_grid(X, Y, Grid, W, H) :-
 check_2x2_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, V),
     next_square(X, Y, Xnext, Ynext, W, H),
-    check_2x2_grid(Xnext, Ynext, Grid, W, H),
-    \+same_kind(-2, V).
+    \+same_kind(-2, V),
+    check_2x2_grid(Xnext, Ynext, Grid, W, H).
 
 /* check a bloc of 2x2 squares */
 check_2x2(X, _, _, W, _) :- X is W - 1.
@@ -188,8 +186,8 @@ find_wall(X, Y, X, Y, Grid, _, _) :- get_value(X, Y, Grid, -2).
 find_wall(Xi, Yi, X, Y, Grid, W, H) :-
     get_value(Xi, Yi, Grid, Val),
     next_square(Xi, Yi, Xnext, Ynext, W, H),
-    find_wall(Xnext, Ynext, X, Y, Grid, W, H),
-    Val \= -2.
+    Val \= -2,
+    find_wall(Xnext, Ynext, X, Y, Grid, W, H).
 
 /*
 nurikabe([
