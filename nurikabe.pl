@@ -3,10 +3,10 @@
 nurikabe([A|L]) :-
     length([A|L], H),
     length(A, W),
-    fd_domain_list([A|L], -1, -2,W,H),
-    check_count_connected(0, 0, [A|L], W, H),
+    fd_domain_list([A|L], -1, -2, W, H),
+    check_count_grid(0, 0, [A|L], W, H),
     check_2x2_grid(0, 0, [A|L], W, H),
-    flatten([A|L],S),
+    flatten([A|L], S),
     fd_labelingff(S).
 
 /* set the domain of the grid */
@@ -20,31 +20,15 @@ check_values([],_,_,_).
 check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=X.
 check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=Y.
 check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A>=1, A=<Nb_values.
-			
-/* check if two cells are adjacent */
-adjacent([X, Ya], [X, Yb]) :-
-    Yb is Ya + 1.
-adjacent([X, Ya], [X, Yb]) :-
-    Yb is Ya - 1.
-adjacent([Xa, Y], [Xb, Y]) :-
-    Xb is Xa + 1.
-adjacent([Xa, Y], [Xb, Y]) :-
-    Xb is Xa - 1.
 
-/* two cells are connected if they are the same kind and they are adjacent */
-connected(X1, Y1, X2, Y2, Grid) :-
-    get_value(X1, Y1, Grid, V1),
-    get_value(X2, Y2, Grid, V2),
-    same_kind(V1, V2),
-    adjacent([X1, Y1], [X2, Y2]).
-
-/* utils functions for check_count_island */
-connected2(X1, Y1, X2, Y2, Grid, L) :-
+/* check if two squares are connected */
+connected(X1, Y1, X2, Y2, Grid, L) :-
     get_value(X1, Y1, Grid, V1),
     get_value(X2, Y2, Grid, V2),
     same_kind(V1, V2),
     \+ memberchk([X2, Y2], L).
 
+/* find the square adjacent */
 d(X, Y, X, Y, _, H) :- Y is H - 1.
 d(X, Ya, X, Yb, _, H) :- Yb is Ya + 1, Ya \= H - 1.
 u(X, 0, X, 0, _, _).
@@ -61,9 +45,9 @@ check_count_island(X, Y, Grid, W, H) :-
     length(L, N).
 
 add_if_connected(X, Y, Xi, Yi, L, L, Grid, _, _) :-
-    \+connected2(X, Y, Xi, Yi, Grid, L).
+    \+connected(X, Y, Xi, Yi, Grid, L).
 add_if_connected(X, Y, Xi, Yi, L, Lnew, Grid, W, H) :-
-    connected2(X, Y, Xi, Yi, Grid, L),
+    connected(X, Y, Xi, Yi, Grid, L),
     connect_adjacents(Xi, Yi, [[Xi,Yi] | L], Lnew, Grid, W, H).
 
 connect_adjacents(X, Y, L, Lnew, Grid, W, H) :-
@@ -90,20 +74,6 @@ check_count_grid(X, Y, Grid, W, H) :-
     Val > 0,
     check_count_island(X, Y, Grid, W, H).
 
-/* count how many squares are connected */
-count_connected(_, _, W, H, _, W, H, 0).
-count_connected(X, Y, Xi, Yi, Grid, W, H, N) :-
-    connected(X, Y, Xi, Yi, Grid),
-    next_square(Xi, Yi, Xnext, Ynext, W, H),
-    count_connected(X, Y, Xnext, Ynext, Grid, W, H, Nnew),
-    N is Nnew + 1,
-    Xi \= W.
-count_connected(X, Y, Xi, Yi, Grid, W, H, N) :-
-    \+connected(X, Y, Xi, Yi, Grid),
-    next_square(Xi, Yi, Xnext, Ynext, W, H),
-    count_connected(X, Y, Xnext, Ynext, Grid, W, H, N),
-    Xi \= W.
-
 /* check if cells are of the same kind */
 /* either both are Walls or both are not Walls */
 same_kind(Va, Vb) :-
@@ -111,24 +81,7 @@ same_kind(Va, Vb) :-
 same_kind(Va, Vb) :-
     Va \= -2, Vb \= -2.
 
-/* check if the values in the squares are respected */
-check_count_connected(W, H, _, W, H).
-check_count_connected(X, Y, Grid, W, H) :-
-    get_value(X, Y, Grid, -1),
-    next_square(X, Y, Xnext, Ynext, Grid, W, H),
-    check_count_connected(Xnext, Ynext, Grid, W, H).
-check_count_connected(X, Y, Grid, W, H) :-
-    get_value(X, Y, Grid, -2),
-    next_square(X, Y, Xnext, Ynext, Grid, W, H),
-    check_count_connected(Xnext, Ynext, Grid, W, H).
-check_count_connected(X, Y, Grid, W, H) :-
-    get_value(X, Y, Grid, Val),
-    count_connected(X, Y, 0, 0, Grid, W, H, Val),
-    next_square(X, Y, Xnext, Ynext, Grid, W, H),
-    check_count_connected(Xnext, Ynext, Grid, W, H),
-    Val \= -1, Val \= -2.
-
-/* check bloc of wall */
+/* check blocs of wall in the grid */
 check_2x2_grid(_, Y, _, _, H) :- Y is H - 1.
 check_2x2_grid(X, Y, Grid, W, H) :-
     get_value(X, Y, Grid, V),
@@ -142,6 +95,7 @@ check_2x2_grid(X, Y, Grid, W, H) :-
     check_2x2_grid(Xnext, Ynext, Grid, W, H),
     \+same_kind(-2, V).
 
+/* check a bloc of 2x2 squares */
 check_2x2(X, _, _, W, _) :- X is W - 1.
 check_2x2(X, Y, Grid, W, H) :-
     down(X, Y, X1, Y1, W, H),
@@ -152,7 +106,7 @@ check_2x2(X, Y, Grid, W, H) :-
     get_value(X3, Y3, Grid, V3),
     \+three_walls(V1, V2, V3).
 
-/* check if 3 square are wall */
+/* check if 3 squares are walls */
 three_walls(V1, V2, V3) :- same_kind(V1, V2), same_kind(V2, V3), same_kind(-2, V1).
 
 /* get the position of the square at the right and below */
@@ -163,7 +117,7 @@ right(Xini, Y, Xnext, Y, W, _) :-
     Xnext is Xini + 1,
     Xnext \= W.
 
-/* get the value of a square */
+/* find the value of a square in the grid */
 /* L is a grid with the value of each square */
 get_value(X, Y, [_|L], Val) :-
     Ytmp is Y - 1,
