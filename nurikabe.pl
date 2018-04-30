@@ -3,22 +3,20 @@
 nurikabe([A|L]) :-
     length([A|L], H),
     length(A, W),
-    fd_domain_list([A|L], -1, -2, W, H),
+    check_domain_list([A|L], W, H),
     check_count_grid(0, 0, [A|L], W, H),
     check_2x2_grid(0, 0, [A|L], W, H),
     check_walls([A|L], W, H).
 
 /* set the domain of the grid */
-fd_domain_list([],_, _,_,_).
-fd_domain_list([A|L], Lv, Hv,W,H) :-
+check_domain_list([],_, _).
+check_domain_list([A|L],W,H) :-
     Nb_values is W*H,
-    check_values(A, Lv,Hv,Nb_values),
-    fd_domain_list(L, Lv,Hv,W,H).		
+    check_values(A,Nb_values),
+    check_domain_list(L,W,H).		
 
-check_values([],_,_,_).		
-check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=X.
-check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=Y.
-check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), fd_domain(A,1,Nb_values).
+check_values([],_).		
+check_values([A|L],Nb_values) :- (A = -1 ; A = -2 ; A>=1, A=<Nb_values ), check_values(L,Nb_values).
 
 /* check if two squares are connected */
 connected(X1, Y1, X2, Y2, Grid, L) :-
