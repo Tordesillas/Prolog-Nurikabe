@@ -20,7 +20,7 @@ fd_domain_list([A|L], Lv, Hv,W,H) :-
 check_values([],_,_,_).		
 check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=X.
 check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A=Y.
-check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), A>=1, A=<Nb_values.
+check_values([A|L],X,Y,Nb_values) :- check_values(L,X,Y,Nb_values), fd_domain(A,1,Nb_values).
 
 /* check if two squares are connected */
 connected(X1, Y1, X2, Y2, Grid, L) :-
