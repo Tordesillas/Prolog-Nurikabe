@@ -6,6 +6,7 @@ nurikabe([A|L]) :-
     fd_domain_list([A|L], -1, -2, W, H),
     check_count_grid(0, 0, [A|L], W, H),
     check_2x2_grid(0, 0, [A|L], W, H),
+    check_walls([A|L], W, H),
     flatten([A|L], S),
     fd_labelingff(S).
 
@@ -171,6 +172,24 @@ count_wall_line([-2|T],Y) :-
     Y is 1+Z.
 count_wall_line([_|T],Z) :-
     count_wall_line(T,Z).
+
+/* check there is an unique wall */
+check_walls(Grid, W, H) :- \+find_wall(0, 0, _, _, Grid, W, H).
+check_walls(Grid, W, H) :-
+    find_wall(0, 0, X, Y, Grid, W, H),
+    check_walls(X, Y, Grid, W, H).
+
+check_walls(X, Y, Grid, W, H) :-
+    connect_adjacents(X, Y, [[X,Y]], L, Grid, W, H),
+    count_walls(0, 0, Grid, W, H, N),
+    length(L, N).
+
+find_wall(X, Y, X, Y, Grid, _, _) :- get_value(X, Y, Grid, -2).
+find_wall(Xi, Yi, X, Y, Grid, W, H) :-
+    get_value(Xi, Yi, Grid, Val),
+    next_square(Xi, Yi, Xnext, Ynext, W, H),
+    find_wall(Xnext, Ynext, X, Y, Grid, W, H),
+    Val \= -2.
 
 /*
 nurikabe([
